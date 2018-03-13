@@ -1,0 +1,106 @@
+[local]
+exten => _1XX,hint,SIP/${EXTEN}
+;local call
+;exten => _XXX,1,Macro(call_local,${EXTEN})
+exten => _1XX,1,Macro(call_local,${EXTEN})
+exten => 199,1,Dial(IAX2/199,10,r)
+
+[fax]
+exten => _X.,1,Dial(SIP/291332/${EXTEN})
+
+[office]
+include => local
+;exten => _7XXXXXXXXXX,1,Dial(SIP/vox/018${EXTEN:1})
+;exten => _8XXXXXXXXXX,1,Dial(SIP/vox/018${EXTEN:1})
+;exten => _XXXXXX,1,Dial(SIP/vox/01${EXTEN})
+exten => _7XXXXXXXXXX,1,Macro(call_out,8${EXTEN:1})
+exten => _8XXXXXXXXXX,1,Macro(call_out,8${EXTEN:1})
+exten => _XXXXXX,1,Macro(call_out,${EXTEN})
+;меню с внутреннего номера
+exten => 400,1,Goto(menu,s,1)
+exten => 200,1,Dial(SIP/${EXTEN},,tT)  
+;exten => _9XXXXXXXXXXX,1,Dial(SIP/vox/02${EXTEN:1})
+; record
+exten => 777,1,Record(mymessage:gsm)
+exten => 777,2,Playback(mymessage)
+
+[from-gsm]
+;exten => 01,1,Dial(SIP/101&SIP/102,60,tT)
+;exten => 01,n,Hangup
+;exten => 02,1,Dial(SIP/105,60,tT)
+;exten => 02,n,Hangup
+;exten => 03,1,Dial(SIP/106,60,tT)
+;exten => 03,n,Hangup
+;exten => 04,1,Dial(SIP/106,60,tT)
+;exten => 04,n,Hangup
+;exten => 06,1,Dial(SIP/101&SIP/102,60,tT)
+;exten => 06,n,Hangup
+;exten => 08,1,Dial(SIP/101&SIP/102,60,tT)
+;exten => 08,n,Hangup
+
+exten => 01,1,Dial(SIP/101&SIP/102,60,tT)
+exten => 01,n,Hangup
+exten => 02,1,Dial(SIP/101&SIP/102,60,tT)
+exten => 02,n,Hangup
+exten => 03,1,Dial(SIP/101&SIP/102,60,tT)
+exten => 03,n,Hangup
+exten => 04,1,Dial(SIP/101&SIP/102,60,tT)
+exten => 04,n,Hangup
+exten => 06,1,Dial(SIP/101&SIP/102,60,tT)
+exten => 06,n,Hangup
+exten => 08,1,Dial(SIP/101&SIP/102,60,tT)
+exten => 08,n,Hangup
+
+;exten => 01,1,Goto(ivr,s,1)
+;exten => 01,n,Hangup
+
+[from-gts]
+exten => 291333,1,Dial(SIP/101&SIP/102,60,tT)
+;exten => 291333,1,Goto(menu,s,1) 
+exten => 291333,n,Hangup
+exten => 291332,1,Dial(IAX2/199,60,tT)
+exten => 291332,n,Hangup
+exten => 291335,1,Dial(SIP/107,60,tT)
+exten => 291335,n,Hangup
+
+[ivr]
+exten => s,1,Answer()
+exten => s,n,Background(mymessage)
+exten => s,n,WaitExten(10)
+exten => s,n,Dial(SIP/100,60)
+exten => s,n,Playback(vm-nobodyavail)
+exten => s,n,Hangup()
+exten => _1XX,1,Dial(SIP/${EXTEN},60)
+exten => _1XX,n,Playback(vm-nobodyavail)
+exten => _1XX,n,Hangup()
+exten => 9,1,Dial(IAX2/199,10)
+exten => 9,n,Hangup()
+exten => i,1,Playback(pbx-invalid)
+exten => i,n,Goto(macro-ivr,s,1)
+exten => t,1,Playback(vm-goodbye)
+exten => t,n,Hangup()
+
+[macro-call_local]
+; exten => s,1,Macro(writecalltodisk)
+; exten => s,n,Macro(set_cid_name)
+; exten => s,n,Macro(notify)
+exten => s,1,Dial(SIP/${ARG1},${ARG2},tT)
+exten => s,n,Hangup
+
+[macro-call_out]
+exten => s,1,GotoIf($[${RAND(1,100)} > 50]?line2)
+exten => s,n,Dial(SIP/vox/01${ARG1},60)
+exten => s,n,Dial(SIP/vox/06${ARG1},60)
+exten => s,n,Hangup
+exten => s,n(line2),Dial(SIP/vox/06${ARG1},60)
+exten => s,n,Dial(SIP/vox/01${ARG1},60)
+exten => s,n,Hangup
+
+[menu]
+exten => s,1,Background(/var/lib/asterisk/moh/voice/menu)
+exten => 1,1,Dial(SIP/200,7,tT)
+exten => 1,2,Dial(SIP/200&SIP/300,30,tT)
+exten => s,2,wait(1)
+exten => s,3,Dial(SIP/200,7,tT)
+exten => s,4,Dial(SIP/200&SIP/300,30,tT)
+exten => s,n,Hangup
